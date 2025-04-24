@@ -1,0 +1,21 @@
+/* @import url('https://fonts.googleapis.com/css2?family=Monoton&display=swap'); */
+@import url('https://fonts.googleapis.com/css2?family=Ultra&display=swap');
+@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+font-family: 'Arial',cursive;  /* Qui puoi usare il font che preferisci */
+background-color: #1a202c; /* Colore grigio scuro */
+color: white; /* Testo bianco */
+}
+.font-Monoton {
+  font-family: 'Monoton', sans-serif;
+  }
+.font-Ultra {
+  font-family: 'Ultra', sans-serif;
+  }
+.text-outline {
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8); /* Puoi regolare la dimensione e l'intensità del contorno */
+}
