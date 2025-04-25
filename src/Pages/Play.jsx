@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import ImageCard from "../ImageCard"; // assicurati che il percorso sia corretto
 import { useNavigate } from "react-router-dom";
+import { useGlobal } from "./context/GlobalContext";
 
 export default function Play() {
   const [images, setImages] = useState([]);
@@ -8,10 +9,11 @@ export default function Play() {
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(true);  // Aggiungi lo stato di caricamento
   const [error, setError] = useState(null);  // Stato per eventuali errori
+  const { allowNSFW } = useGlobal();
   const navigate = useNavigate();
   useEffect(() => {
     const fetchImages = () => {
-      fetch("http://localhost:8000/images")
+      fetch(`http://localhost:8000/images?nsfw=${allowNSFW ? 1 : 0}`)
         .then((res) => {
           if (!res.ok) throw new Error("Errore nel recupero delle immagini");
           return res.json();

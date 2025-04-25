@@ -72,19 +72,25 @@ class Database:
                     await conn.commit()
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Errore durante l'inserimento: {str(e)}")
-    async def fetch_images(self):
+    async def fetch_images(self, nsfw: int = 0):
+        print(f"Fetching images with nsfw={nsfw}")
         try:
             async with self.pool.acquire() as conn:
                 async with conn.cursor(aiomysql.DictCursor) as cur:
-                    await cur.execute(
-                        """
+                    # Aggiungi la condizione per il filtro delle immagini NSFW
+                    if nsfw == 0:
+                        nsfw_condition = "AND sp.nsfw = 0"  # Solo immagini non NSFW
+                    else:
+                        nsfw_condition = ""  # Senza filtro, restituisce sia immagini NSFW che non NSFW
+                    query = f"""
                         SELECT c.name, sp.url
                         FROM smashorpass sp
                         JOIN characters c ON sp.character_id = c.mal_id
+                        WHERE 1=1 {nsfw_condition}
                         ORDER BY RAND()
                         LIMIT 20
-                        """
-                    )
+                    """
+                    await cur.execute(query)
                     return await cur.fetchall()
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Errore durante il recupero delle immagini: {str(e)}")
@@ -149,8 +155,8 @@ async def add_image(image_data: ImageRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 @app.get("/images")
-async def get_images():
-    images = await db.fetch_images()
+async def get_images(nsfw: int = 0):
+    images = await db.fetch_images(nsfw)
     return [{"url": row["url"], "name": row["name"]} for row in images]
 @app.get("/characters")
 async def get_characters(query: str):

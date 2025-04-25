@@ -1,12 +1,12 @@
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { Settings } from 'lucide-react'; // Assicurati di avere installato lucide-react
-
+import { useGlobal } from "./context/GlobalContext";
 
 export default function Home() {
   const navigate = useNavigate();
   const [showSettings, setShowSettings] = useState(false);
-  const [allowNSFW, setAllowNSFW] = useState(false);
+  const { allowNSFW, setAllowNSFW } = useGlobal();
 
   return (
     <div className="relative flex flex-col items-center justify-center h-screen bg-gray-900 text-center p-4">
