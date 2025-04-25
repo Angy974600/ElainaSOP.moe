@@ -1,5 +1,7 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { useGlobal } from "./context/GlobalContext";
+
 
 export default function CharacterPage() {
   const location = useLocation();
@@ -7,10 +9,11 @@ export default function CharacterPage() {
   const { name, character_id } = location.state || {};
   const [images, setImages] = useState([]);
   const [modalImage, setModalImage] = useState(null);
+  const { allowNSFW } = useGlobal();
 
   useEffect(() => {
     if (character_id) {
-      fetch(`http://localhost:8000/images_by_character?name=${character_id}`)
+      fetch(`http://localhost:8000/images_by_character?name=${character_id} &nsfw=${allowNSFW ? 1 : 0}`)
         .then((res) => res.json())
         .then((data) => setImages(data));
     }

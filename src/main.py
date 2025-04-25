@@ -33,7 +33,6 @@ class Database:
         self.pool = None
         self.connection_timeout = 10  # Timeout per la connessione (in secondi)
         self.query_timeout = 5  # Timeout per le query (in secondi)
-        
 
     async def connect(self):
         try:
@@ -48,7 +47,10 @@ class Database:
                         charset="utf8mb4",
                         minsize=1,
                         maxsize=2,  # Più connessioni nella pool
-                        pool_recycle=1800
+                        pool_recycle=1800,
+                        autocommit=True
+                        
+                        
                     ), self.connection_timeout
                 )
         except TimeoutError:
@@ -73,7 +75,6 @@ class Database:
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Errore durante l'inserimento: {str(e)}")
     async def fetch_images(self, nsfw: int = 0):
-        print(f"Fetching images with nsfw={nsfw}")
         try:
             async with self.pool.acquire() as conn:
                 async with conn.cursor(aiomysql.DictCursor) as cur:
@@ -126,11 +127,15 @@ class Database:
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Errore durante il recupero dei personaggi: {str(e)}")
 
-    async def fetch_images_by_character(self, mal_id: int):
+    async def fetch_images_by_character(self, mal_id: int, nsfw: int = 0):
         try:
+            if nsfw == 0:
+                nsfw_condition = "AND nsfw = 0"  # Solo immagini non NSFW
+            else:
+                nsfw_condition = ""  # Senza filtro, restituisce sia immagini NSFW che non NSFW
             async with db.pool.acquire() as conn:
                 async with conn.cursor(aiomysql.DictCursor) as cur:
-                    await cur.execute("SELECT * FROM smashorpass WHERE character_id = %s", (mal_id,))
+                    await cur.execute("SELECT * FROM smashorpass WHERE character_id = %s " + nsfw_condition, (mal_id,))
                     return await cur.fetchall()
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Errore durante il recupero delle immagini: {str(e)}")
@@ -148,7 +153,6 @@ async def startup():
     await db.connect()
 @app.post("/addImage")
 async def add_image(image_data: ImageRequest):
-    print(image_data)  
     try:
         await db.insert_image(image_data)
         return {"message": "Immagine aggiunta con successo"}
@@ -164,8 +168,9 @@ async def get_characters(query: str):
     return characters
 
 @app.get("/images_by_character")
-async def images_by_character(name: str):
-    images = await db.fetch_images_by_character(name)
+async def images_by_character(character_id: str, nsfw: int = 0):
+    print(f"Fetching images for character: {character_id}, NSFW: {nsfw}")
+    images = await db.fetch_images_by_character(character_id, nsfw)
     if not images:
         raise HTTPException(status_code=404, detail="Nessuna immagine trovata per questo personaggio")
     return images
